@@ -9,4 +9,5 @@ public interface IStudentService {
     public Student getStudentById(Long id);
     public Student saveStudent(Student student);
     public void deleteStudent(Long id);
+    public Student getStudentByEmail(String email);
 }

@@ -92,4 +92,26 @@ class StudentServiceTest {
 
         verify(studentRepository, times(1)).deleteById(1L);
     }
+        @Test
+    public void testGetStudentByEmail() {
+        // 1. Arrange (Préparation)
+        String email = "souha@test.tn";
+        Student mockStudent = new Student();
+        mockStudent.setEmail(email);
+        mockStudent.setFirstName("Souha");
+
+        // On dit à Mockito : "Quand on appelle findByEmail, retourne ce Student"
+        when(studentRepository.findByEmail(email)).thenReturn(Optional.of(mockStudent));
+
+        // 2. Act (Action)
+        Student result = studentService.getStudentByEmail(email);
+
+        // 3. Assert (Vérification)
+        assertNotNull(result);
+        assertEquals("Souha", result.getFirstName());
+        assertEquals(email, result.getEmail());
+        
+        // Vérifie que la méthode du repository a bien été appelée une fois
+        verify(studentRepository, times(1)).findByEmail(email);
+    }
 }
