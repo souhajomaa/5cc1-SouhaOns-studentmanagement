@@ -10,4 +10,5 @@ public interface IDepartmentService {
     public Department getDepartmentById(Long idDepartment);
     public Department saveDepartment(Department department);
     public void deleteDepartment(Long idDepartment);
+    public long countDepartments();
 }

@@ -32,4 +32,8 @@ public class DepartmentService implements IDepartmentService {
     public void deleteDepartment(Long idDepartment) {
 departmentRepository.deleteById(idDepartment);
     }
+    @Override
+    public long countDepartments() {
+        return departmentRepository.count();
+    }
 }
