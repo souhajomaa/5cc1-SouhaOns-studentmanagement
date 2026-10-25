@@ -1,5 +1,7 @@
 package tn.esprit.studentmanagement;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,7 +11,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 class StudentManagementApplicationTests {
 
     @Test
-    void contextLoads() {
+    void contextLoads(
+            org.springframework.context.ApplicationContext context) {
+        assertNotNull(context, "Spring application context should load");
     }
 
 }
