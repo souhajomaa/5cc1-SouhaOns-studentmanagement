@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jakarta.persistence.EntityNotFoundException;
 import tn.esprit.studentmanagement.entities.Enrollment;
 import tn.esprit.studentmanagement.entities.Status;
 import tn.esprit.studentmanagement.repositories.EnrollmentRepository;
@@ -59,13 +61,14 @@ class EnrollmentServiceTest {
         Enrollment result = enrollmentService.getEnrollmentById(1L);
 
         assertEquals(15.5, result.getGrade());
+        assertThrows(EntityNotFoundException.class, () -> enrollmentService.getEnrollmentById(99L));
     }
 
     @Test
     void getEnrollmentById_inexistant_leveNoSuchElementException() {
         when(enrollmentRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(NoSuchElementException.class,
+        assertThrows(EntityNotFoundException.class,
                 () -> enrollmentService.getEnrollmentById(99L));
     }
 
