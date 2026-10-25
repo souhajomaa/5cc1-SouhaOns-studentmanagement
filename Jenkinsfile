@@ -16,12 +16,10 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    // "origin/jomaasouha_5cc1" -> "jomaasouha_5cc1"
                     env.BRANCHE = (env.GIT_BRANCH ?: 'main').replaceAll('^origin/', '')
                     env.TAG = "${env.BRANCHE}-${env.BUILD_NUMBER}"
                 }
                 sh 'git log -1 --pretty=format:"%h - %an : %s"'
-                echo "Branche : ${env.BRANCHE} — tag de l'image : ${env.TAG}"
             }
         }
         stage('Build') {
@@ -36,6 +34,24 @@ pipeline {
             post {
                 always {
                     junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Analyse SonarQube') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                      mvn -B sonar:sonar \\
+                        -Dsonar.projectKey=student-management-${BRANCHE} \\
+                        -Dsonar.projectName=student-management-${BRANCHE}
+                    """
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -72,7 +88,8 @@ pipeline {
     post {
         success {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            echo "Succès : image ${IMAGE}:${TAG} publiée sur Docker Hub."
+            echo "Succès : image ${IMAGE}:${TAG} publiée."
+            echo "Analyse SonarQube : projet student-management-${BRANCHE}"
         }
         failure {
             echo 'Échec : consulter la Console Output du stage en rouge.'
