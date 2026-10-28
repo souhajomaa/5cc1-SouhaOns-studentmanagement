@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import jakarta.persistence.EntityNotFoundException;
 import tn.esprit.studentmanagement.entities.Department;
 import tn.esprit.studentmanagement.repositories.DepartmentRepository;
 
@@ -64,8 +66,7 @@ class DepartmentServiceTest {
         when(departmentRepository.findById(99L)).thenReturn(Optional.empty());
 
         // Le service appelle Optional.get() : un id inconnu provoque une exception
-        assertThrows(NoSuchElementException.class,
-                () -> departmentService.getDepartmentById(99L));
+       assertThrows(EntityNotFoundException.class, () -> departmentService.getDepartmentById(99L));
     }
 
     @Test

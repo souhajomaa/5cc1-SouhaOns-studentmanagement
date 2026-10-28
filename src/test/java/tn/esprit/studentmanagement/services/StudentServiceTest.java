@@ -93,7 +93,7 @@ class StudentServiceTest {
         verify(studentRepository, times(1)).deleteById(1L);
     }
         @Test
-    public void testGetStudentByEmail() {
+     void testGetStudentByEmail() {
         // 1. Arrange (Préparation)
         String email = "souha@test.tn";
         Student mockStudent = new Student();

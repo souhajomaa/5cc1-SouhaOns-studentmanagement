@@ -16,12 +16,31 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    // "origin/jomaasouha_5cc1" -> "jomaasouha_5cc1"
                     env.BRANCHE = (env.GIT_BRANCH ?: 'main').replaceAll('^origin/', '')
                     env.TAG = "${env.BRANCHE}-${env.BUILD_NUMBER}"
                 }
                 sh 'git log -1 --pretty=format:"%h - %an : %s"'
-                echo "Branche : ${env.BRANCHE} — tag de l'image : ${env.TAG}"
+            }
+        }
+        stage('Version') {
+            steps {
+                script {
+                    // version lue dans le pom, ex. 1.1-SNAPSHOT
+                    def pomVersion = sh(returnStdout: true, script:
+                        'mvn -q help:evaluate -Dexpression=project.version -DforceStdout'
+                    ).trim()
+                    if (env.BRANCHE == 'main') {
+                        // sur main : release unique et immuable, ex. 1.1.27
+                        env.VERSION = pomVersion.replace('-SNAPSHOT', '') +
+                                      '.' + env.BUILD_NUMBER
+                        sh "mvn -B -q versions:set -DnewVersion=${VERSION} " +
+                           "-DgenerateBackupPoms=false"
+                    } else {
+                        // sur une branche : on garde le snapshot
+                        env.VERSION = pomVersion
+                    }
+                }
+                echo "Version du livrable : ${VERSION}"
             }
         }
         stage('Build') {
@@ -36,6 +55,33 @@ pipeline {
             post {
                 always {
                     junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Analyse SonarQube') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh """
+                      mvn -B sonar:sonar \\
+                        -Dsonar.projectKey=student-management-${BRANCHE} \\
+                        -Dsonar.projectName=student-management-${BRANCHE}
+                    """
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        stage('Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'nexus',
+                                                  usernameVariable: 'NEXUS_USER',
+                                                  passwordVariable: 'NEXUS_PASS')]) {
+                    sh 'mvn -B deploy -DskipTests -s settings-nexus.xml'
                 }
             }
         }
@@ -72,7 +118,8 @@ pipeline {
     post {
         success {
             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            echo "Succès : image ${IMAGE}:${TAG} publiée sur Docker Hub."
+            echo "Succès : version ${VERSION} sur Nexus, image ${IMAGE}:${TAG} sur Docker Hub."
+            echo "Analyse SonarQube : projet student-management-${BRANCHE}"
         }
         failure {
             echo 'Échec : consulter la Console Output du stage en rouge.'
