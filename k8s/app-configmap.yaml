@@ -1,0 +1,10 @@
+# ConfigMap : configuration non sensible, injectée en variables d'environnement.
+# "mysql" est le nom du Service MySQL : le DNS du cluster le résout.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  MYSQL_DATABASE: studentdb
+  SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/studentdb?createDatabaseIfNotExist=true
+  SPRING_DATASOURCE_USERNAME: root
