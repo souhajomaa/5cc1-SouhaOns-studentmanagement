@@ -1,0 +1,10 @@
+# Les fichiers JSON de ce dossier deviennent des tableaux de bord (dossier "DevOps")
+apiVersion: 1
+providers:
+  - name: student-management
+    folder: DevOps
+    type: file
+    disableDeletion: false
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards

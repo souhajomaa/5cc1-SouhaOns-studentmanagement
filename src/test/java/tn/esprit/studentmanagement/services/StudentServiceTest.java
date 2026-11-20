@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tn.esprit.studentmanagement.entities.Student;
+import tn.esprit.studentmanagement.metrics.StudentMetrics;
 import tn.esprit.studentmanagement.repositories.StudentRepository;
 
 import java.util.List;
@@ -27,7 +28,8 @@ class StudentServiceTest {
 
     @InjectMocks
     private StudentService studentService;
-
+  @Mock
+    private StudentMetrics studentMetrics; // sinon NullPointerException dans saveStudent
     private Student student;
 
     @BeforeEach
@@ -114,4 +116,18 @@ class StudentServiceTest {
         // Vérifie que la méthode du repository a bien été appelée une fois
         verify(studentRepository, times(1)).findByEmail(email);
     }
+    
+    @Test
+    void saveStudent_enregistreEtCompte() {
+        Student s = new Student();
+        s.setFirstName("Test");
+        when(studentRepository.save(s)).thenReturn(s);
+
+        Student result = studentService.saveStudent(s);
+
+        assertEquals(s, result);
+        verify(studentRepository).save(s);
+        verify(studentMetrics).studentCreated();
+    }
 }
+

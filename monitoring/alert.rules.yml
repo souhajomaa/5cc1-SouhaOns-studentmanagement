@@ -1,0 +1,40 @@
+# Règles d'alerte évaluées par Prometheus (onglet Alerts de l'interface).
+groups:
+  - name: student-management
+    rules:
+
+      - alert: CibleInjoignable
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} ({{ $labels.instance }}) ne répond plus depuis 1 min"
+
+      - alert: LatenceElevee
+        expr: >
+          sum(rate(http_server_requests_seconds_sum{job="student-app"}[5m]))
+          / sum(rate(http_server_requests_seconds_count{job="student-app"}[5m])) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latence moyenne > 500 ms sur student-management"
+
+      - alert: HeapJvmElevee
+        expr: >
+          sum(jvm_memory_used_bytes{job="student-app", area="heap"})
+          / sum(jvm_memory_max_bytes{job="student-app", area="heap"}) > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap JVM utilisée à plus de 85 %"
+
+      - alert: BuildJenkinsEnEchec
+        expr: default_jenkins_builds_last_build_result_ordinal > 1
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dernier build en échec : {{ $labels.jenkins_job }}"

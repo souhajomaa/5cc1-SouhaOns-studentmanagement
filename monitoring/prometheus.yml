@@ -1,0 +1,34 @@
+# Configuration Prometheus : qui interroger, à quelle fréquence, où sont les règles.
+global:
+  scrape_interval: 15s          # toutes les 15 s, Prometheus va chercher les métriques
+  evaluation_interval: 15s      # toutes les 15 s, il évalue les règles d'alerte
+
+rule_files:
+  - /etc/prometheus/alert.rules.yml
+
+scrape_configs:
+  # Prometheus se surveille lui-même
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # La VM (CPU, mémoire, disque, réseau) via node-exporter
+  - job_name: node
+    static_configs:
+      - targets: ['localhost:9100']
+        labels:
+          machine: vm-devops
+
+  # Jenkins : plugin "Prometheus metrics", chemin /prometheus/
+  - job_name: jenkins
+    metrics_path: /prometheus/
+    static_configs:
+      - targets: ['localhost:8080']
+
+  # L'application dans Minikube, jointe par le NodePort du Service student-app
+  - job_name: student-app
+    metrics_path: /student/actuator/prometheus
+    static_configs:
+      - targets: ['192.168.49.2:30089']   # minikube ip : NodePort
+        labels:
+          env: minikube
